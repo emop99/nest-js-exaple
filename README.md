@@ -8,7 +8,7 @@
 # Nest.Js Example
 
 ## Insert Library
-- swgger
+- swagger (http://localhost:3312/api/v1/docs)
 - typeORM
 - date-fns
 - axios
