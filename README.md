@@ -7,12 +7,7 @@
 
 # Nest.Js Example
 
-## Insert Library
-- swagger (http://localhost:3312/api/v1/docs)
-- typeORM
-- date-fns
-- axios
-- uuid
-
 ## Example List
-- Main Pay 결제 연동 (진행중)
+- Main Pay 결제 연동
+- 유저 회원가입 & 로그인
+- Swagger 사용 (http://localhost:3312/api/v1/docs)

@@ -14,6 +14,18 @@ export class UserEntity {
     name: string;
 
     @Column({
+        length: 50,
+        type: 'varchar',
+    })
+    loginId: string;
+
+    @Column({
+        length: 250,
+        type: 'varchar',
+    })
+    password: string;
+
+    @Column({
         type: 'varchar',
         length: 25,
         comment: '핸드폰 번호',

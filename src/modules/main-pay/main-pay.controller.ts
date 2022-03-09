@@ -27,7 +27,7 @@ export class MainPayController {
     })
     async regularRegister(
         @Body() requestBody: RegularCardRegisterApiDto
-    ) {
+    ): Promise<IBillKeyResponse> {
         let response: IBillKeyRegisterResponse;
         let result: IBillKeyResponse = {
             result: false,

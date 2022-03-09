@@ -13,7 +13,7 @@ export const MariadbProviders = [
             synchronize: process.env.DB_SYNCHRONIZE === '1',
             logging: process.env.DB_LOGGING === '1',
             charset: 'utf8mb4_unicode_ci',
-            entities: [__dirname + '/../../**/*.entity{.ts,.js}'],
+            entities: [__dirname + '/../../../entity/*.entity{.ts,.js}'],
         })
     }
 ]
