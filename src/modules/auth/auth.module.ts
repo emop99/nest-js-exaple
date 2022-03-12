@@ -4,11 +4,14 @@ import {AuthController} from "./auth.controller";
 import {JwtModule} from "@nestjs/jwt";
 import {AuthProviders} from "./auth.providers";
 import {MariadbModule} from "../../config/mariadbModule";
+import {PassportModule} from "@nestjs/passport";
+import {JwtStrategy} from "./strategies/jwt-auth.strategy";
 
 @Module({
     imports: [
         MariadbModule,
         AuthModule,
+        PassportModule,
         JwtModule.registerAsync({
             useFactory: () => ({
                 secret: process.env.JWT_SECRET,
@@ -17,7 +20,7 @@ import {MariadbModule} from "../../config/mariadbModule";
         }),
     ],
     controllers: [AuthController],
-    providers: [AuthService, ...AuthProviders],
+    providers: [AuthService, ...AuthProviders, JwtStrategy],
 
 })
 export class AuthModule {

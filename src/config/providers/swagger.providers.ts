@@ -7,6 +7,11 @@ export class SwaggerProviders {
         return this.builder
             .setTitle('Nest Js Example')
             .setVersion('1.0')
+            .addBearerAuth({
+                type: 'http',
+                scheme: 'bearer',
+                bearerFormat: 'Token'
+            }, 'bearer')
             .build();
     }
 }

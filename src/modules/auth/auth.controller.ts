@@ -1,10 +1,10 @@
-import {Body, Controller, HttpCode, Post, Res, UnauthorizedException} from '@nestjs/common';
+import {Body, Controller, Get, HttpCode, Post, Res, UnauthorizedException, UseGuards, Request} from '@nestjs/common';
 import {AuthService} from "./auth.service";
-import {ApiOperation, ApiTags} from "@nestjs/swagger";
+import {ApiBearerAuth, ApiOperation, ApiTags} from "@nestjs/swagger";
 import {UserLoginApiDto} from "./dto/user-login-api.dto";
-import {IUserLoginResponse} from "./interface/login.interface";
 import {Response} from "express";
 import {UserRegisterApiDto} from "./dto/user-register-api.dto";
+import {JwtAuthGuard} from "./guard/jwt-auth.guard";
 
 @Controller('auth')
 @ApiTags('auth')
@@ -23,12 +23,9 @@ export class AuthController {
         @Body() requestBody: UserLoginApiDto,
         @Res() res: Response,
     ) {
-        const token = await this.authService.userLogin(requestBody);
-        if (!token) {
-            throw new UnauthorizedException({'reason': '아이디 혹은 패스워드를 확인해주세요.'});
-        }
-        res.setHeader('Set-Cookie', token);
-        return res.json({token: token} as IUserLoginResponse);
+        const loginResult = await this.authService.userLogin(requestBody);
+        res.setHeader('Authorization', 'Bearer ' + loginResult.access_token);
+        return res.json(loginResult.userInfo);
     };
 
     @HttpCode(200)
@@ -49,5 +46,16 @@ export class AuthController {
         } catch (e) {
             throw new UnauthorizedException({'reason': '저장 중 오류가 발생하였습니다.'});
         }
+    };
+
+    @HttpCode(200)
+    @Get('loginCheck')
+    @ApiOperation({
+        description: '유저 로그인 여부 체크',
+    })
+    @ApiBearerAuth()
+    @UseGuards(JwtAuthGuard)
+    async loginCheck(@Request() req) {
+        return req.user;
     };
 }
