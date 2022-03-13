@@ -1,14 +1,17 @@
-import {Body, Controller, Get, HttpCode, Post, Res, UnauthorizedException, UseGuards, Request} from '@nestjs/common';
+import {Body, Controller, Get, HttpCode, Post, Res, UnauthorizedException, UseGuards, Request, Logger} from '@nestjs/common';
 import {AuthService} from "./auth.service";
 import {ApiBearerAuth, ApiOperation, ApiTags} from "@nestjs/swagger";
 import {UserLoginApiDto} from "./dto/user-login-api.dto";
 import {Response} from "express";
 import {UserRegisterApiDto} from "./dto/user-register-api.dto";
 import {JwtAuthGuard} from "./guard/jwt-auth.guard";
+import {DefaultLogger} from "../../config/logger/default.logger";
 
 @Controller('auth')
 @ApiTags('auth')
 export class AuthController {
+    private logger = new DefaultLogger('auth');
+
     constructor(
         private readonly authService: AuthService,
     ) {
@@ -44,6 +47,7 @@ export class AuthController {
             requestBody.password = await this.authService.transformPassword(requestBody.password);
             await this.authService.userRegister(requestBody);
         } catch (e) {
+            this.logger.error('userRegister::Error', e);
             throw new UnauthorizedException({'reason': '저장 중 오류가 발생하였습니다.'});
         }
     };
