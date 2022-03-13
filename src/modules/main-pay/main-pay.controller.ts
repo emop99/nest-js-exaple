@@ -1,15 +1,21 @@
-import {Controller, Post, Body} from '@nestjs/common';
+import {Controller, Post, Body, UseGuards, Request} from '@nestjs/common';
 import {MainPayService} from './main-pay.service';
-import {ApiOperation, ApiTags} from "@nestjs/swagger";
+import {ApiBearerAuth, ApiOperation, ApiTags} from "@nestjs/swagger";
 import {RegularCardRegisterApiDto} from "./dto/regular-card-register-api.dto";
-import {IBillKeyRegisterResponse, IBillKeyResponse} from "./interface/regular.interface";
+import {IBillKeyRegisterResponse, IBillKeyResponse, IRegularPaymentResponse} from "./interface/regular.interface";
 import {MainPayApi} from "../../common/api/main-pay.api";
-import {format} from "date-fns";
 import {MainPayBillKeyEntity} from "../../entity/main-pay-bill-key.entity";
+import {JwtAuthGuard} from "../auth/guard/jwt-auth.guard";
+import {DefaultLogger} from "../../config/logger/default.logger";
+import {RegularPaymentApiDto} from "./dto/regular-payment-api.dto";
+import {IBillKeyPaymentResponse} from "../../common/api/interface/main-pay-api.interface";
+import {MainPayPaymentServiceName, MainPayResponsePayMethod} from "../../entity/main-pay-response.entity";
 
 @Controller('main-pay')
 @ApiTags('MainPay 연동')
 export class MainPayController {
+    private logger = new DefaultLogger('mainPay', '/mainPay');
+
     constructor(private readonly mainPayService: MainPayService) {
     }
 
@@ -17,16 +23,85 @@ export class MainPayController {
     @ApiOperation({
         description: '메인페이 정기결제 결제 시도',
     })
-    regularPayment() {
+    @ApiBearerAuth()
+    @UseGuards(JwtAuthGuard)
+    async regularPayment(
+        @Request() request,
+        @Body() requestBody: RegularPaymentApiDto,
+    ): Promise<IRegularPaymentResponse> {
+        let result: IRegularPaymentResponse = {
+            result: false,
+            resultMessage: '',
+        };
 
+        const billKeyInfo: MainPayBillKeyEntity = await this.mainPayService.findBillKeyData(request.user.id);
+
+        if (!billKeyInfo) {
+            result.resultMessage = '등록된 결제 카드가 없습니다.';
+            return result;
+        }
+
+        const mainPayApi = new MainPayApi();
+
+        const response = await mainPayApi.billKeyPayment({
+            amount: String(requestBody.amount),
+            apiKey: process.env.MAINPAY_API_KEY,
+            billKey: billKeyInfo.billKey,
+            customerName: request.user.name,
+            goodsName: requestBody.goodsName,
+            mbrNo: process.env.MAINPAY_MBRNO,
+        });
+
+        this.logger.log(`regularRegister::ResponseData::${JSON.stringify({
+            userId: request.user.id,
+            data: response.data,
+        })}`);
+
+        const responseData = response.data as IBillKeyPaymentResponse;
+
+        const mainPayResponseInfo = {
+            amount: requestBody.amount,
+            applyNo: responseData.data.applNo,
+            billKey: billKeyInfo.billKey,
+            failMsg: "",
+            isFail: false,
+            mbrNo: process.env.MAINPAY_MBRNO,
+            mbrRefNo: mainPayApi.mainPayBaseInfo.mbrRefNo,
+            payAuto: false,
+            payMethod: MainPayResponsePayMethod.CARD,
+            payType: "",
+            paymentService: MainPayPaymentServiceName.PAYMENT_TEST,
+            refNo: responseData.data.refNo,
+            signature: mainPayApi.mainPayBaseInfo.signature,
+            taxAmt: responseData.data.taxAmount,
+            timestamp: mainPayApi.mainPayBaseInfo.timestamps,
+        };
+
+        if (response.data.resultCode === '200') {
+            await this.mainPayService.regularPaymentResponseInsert(mainPayResponseInfo);
+            result.resultMessage = response.data.resultMessage;
+            result.result = true;
+        } else {
+            await this.mainPayService.regularPaymentResponseInsert({
+                ...mainPayResponseInfo,
+                failMsg: responseData.resultMessage,
+                isFail: true,
+            });
+            result.resultMessage = response.data.resultMessage;
+        }
+
+        return result;
     }
 
     @Post('regular/register')
     @ApiOperation({
         description: '메인페이 정기결제 카드 등록',
     })
+    @ApiBearerAuth()
+    @UseGuards(JwtAuthGuard)
     async regularRegister(
-        @Body() requestBody: RegularCardRegisterApiDto
+        @Request() request,
+        @Body() requestBody: RegularCardRegisterApiDto,
     ): Promise<IBillKeyResponse> {
         let response: IBillKeyRegisterResponse;
         let result: IBillKeyResponse = {
@@ -35,7 +110,7 @@ export class MainPayController {
         };
         const mainPayApi = new MainPayApi();
 
-        const billKeyInfo: MainPayBillKeyEntity = await this.mainPayService.findBillKeyData(requestBody.userId);
+        const billKeyInfo: MainPayBillKeyEntity = await this.mainPayService.findBillKeyData(request.user.id);
 
         if (billKeyInfo) {
             try {
@@ -46,6 +121,7 @@ export class MainPayController {
                 });
                 await this.mainPayService.billKeyDelete(billKeyInfo.id);
             } catch (e) {
+                this.logger.error('regularRegister::Error', e);
                 throw new Error(e);
             }
         }
@@ -57,22 +133,19 @@ export class MainPayController {
                 cardNo: requestBody.cardNo,
                 expd: requestBody.expd,
                 birthDay: requestBody.birthDay,
-                userId: requestBody.userId,
-                userName: requestBody.userName,
-                userPhone: requestBody.userPhone,
+                userId: request.user.id,
+                userName: request.user.name,
+                userPhone: request.user.phone,
             });
         } catch (e) {
+            this.logger.error('regularRegister::Error', e);
             throw new Error(e);
         }
 
-        const loggerData = {
-            method: 'MainPayController::regularRegister',
-            userId: requestBody.userId,
+        this.logger.log(`regularRegister::ResponseData::${JSON.stringify({
+            userId: request.user.id,
             data: response.data,
-            createdAt: format(new Date(), 'yyyy-MM-dd HH:mm:ss'),
-        };
-
-        // logger.info(JSON.stringify(loggerData));
+        })}`);
 
         if (response.resultCode === '200') {
             await this.mainPayService.billKeyRegister({
@@ -84,7 +157,7 @@ export class MainPayController {
                 mbrNo: response.data.mbrNo,
                 mbrRefNo: response.data.mbrRefNo,
                 refNo: response.data.refNo,
-                userId: requestBody.userId,
+                userId: request.user.id,
             });
             result.resultMessage = response.resultMessage;
             result.result = true;

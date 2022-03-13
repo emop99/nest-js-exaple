@@ -28,3 +28,11 @@ export interface IBillKeyRegisterResponse {
         custommerTelNo: string;
     }
 }
+
+/**
+ * 정기결제 카드 결제 Response
+ */
+export interface IRegularPaymentResponse {
+    result: boolean;
+    resultMessage: string;
+}

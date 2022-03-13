@@ -22,22 +22,4 @@ export class RegularCardRegisterApiDto {
     })
     @IsString()
     readonly expd: string;
-
-    @ApiProperty({
-        description: '회원 번호'
-    })
-    @IsNumber()
-    readonly userId: number;
-
-    @ApiProperty({
-        description: '고객명'
-    })
-    @IsString()
-    readonly userName: string;
-
-    @ApiProperty({
-        description: '고객 전화번호'
-    })
-    @IsString()
-    readonly userPhone: string;
 }

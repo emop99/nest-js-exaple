@@ -3,6 +3,7 @@ import {IsNull, Repository} from "typeorm";
 import {MainPayResponseEntity} from "../../entity/main-pay-response.entity";
 import {MainPayBillKeyEntity} from "../../entity/main-pay-bill-key.entity";
 import {RegularCardRegisterDto} from "./dto/regular-card-register.dto";
+import {RegularCardPaymentResponseDto} from "./dto/regular-card-payment-response.dto";
 
 @Injectable()
 export class MainPayService {
@@ -29,5 +30,9 @@ export class MainPayService {
 
     public async billKeyDelete(id: number): Promise<void> {
         await this.mainPayBillKeyRepository.update({id: id}, {deletedAt: new Date()});
-    }
+    };
+
+    public async regularPaymentResponseInsert(mainPayResponseInfo: RegularCardPaymentResponseDto): Promise<void> {
+        await this.mainPayResponseRepository.save(mainPayResponseInfo);
+    };
 }

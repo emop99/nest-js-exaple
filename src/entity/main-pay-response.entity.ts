@@ -105,7 +105,7 @@ export class MainPayResponseEntity {
 
     @Column({
         type: "varchar",
-        length: 12,
+        length: 20,
         nullable: true,
     })
     timestamp: string;
