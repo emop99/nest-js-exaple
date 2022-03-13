@@ -3,7 +3,7 @@ import {AuthService} from "./auth.service";
 import {AuthController} from "./auth.controller";
 import {JwtModule} from "@nestjs/jwt";
 import {AuthProviders} from "./auth.providers";
-import {MariadbModule} from "../../config/mariadbModule";
+import {MariadbModule} from "../../config/mariadb.module";
 import {PassportModule} from "@nestjs/passport";
 import {JwtStrategy} from "./strategies/jwt-auth.strategy";
 

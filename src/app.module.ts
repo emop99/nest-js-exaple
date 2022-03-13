@@ -3,7 +3,7 @@ import {AppController} from './app.controller';
 import {AppService} from './app.service';
 import {ConfigModule} from '@nestjs/config';
 import {MainPayModule} from './modules/main-pay/main-pay.module';
-import {MariadbModule} from "./config/mariadbModule";
+import {MariadbModule} from "./config/mariadb.module";
 import {AuthModule} from './modules/auth/auth.module';
 
 @Module({
