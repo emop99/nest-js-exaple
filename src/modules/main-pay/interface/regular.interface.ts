@@ -36,3 +36,11 @@ export interface IRegularPaymentResponse {
     result: boolean;
     resultMessage: string;
 }
+
+/**
+ * 신용 카드 수기 결제 Response
+ */
+export interface IHandwritingPaymentResponse {
+    result: boolean;
+    resultMessage: string;
+}

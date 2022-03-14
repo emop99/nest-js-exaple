@@ -1,7 +1,7 @@
 import {IsBoolean, IsEnum, IsNumber, IsString} from "class-validator";
 import {MainPayPaymentServiceName, MainPayResponsePayMethod} from "../../../entity/main-pay-response.entity";
 
-export class RegularCardPaymentResponseDto {
+export class HandWritingPaymentResponseDto {
     @IsString()
     mbrRefNo: string;
 
@@ -19,12 +19,6 @@ export class RegularCardPaymentResponseDto {
 
     @IsString()
     signature: string;
-
-    @IsString()
-    billKey: string;
-
-    @IsBoolean()
-    payAuto: boolean;
 
     @IsString()
     failMsg: string;

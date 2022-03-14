@@ -2,14 +2,16 @@ import {Controller, Post, Body, UseGuards, Request} from '@nestjs/common';
 import {MainPayService} from './main-pay.service';
 import {ApiBearerAuth, ApiOperation, ApiTags} from "@nestjs/swagger";
 import {RegularCardRegisterApiDto} from "./dto/regular-card-register-api.dto";
-import {IBillKeyRegisterResponse, IBillKeyResponse, IRegularPaymentResponse} from "./interface/regular.interface";
+import {IBillKeyRegisterResponse, IBillKeyResponse, IHandwritingPaymentResponse, IRegularPaymentResponse} from "./interface/regular.interface";
 import {MainPayApi} from "../../common/api/main-pay.api";
 import {MainPayBillKeyEntity} from "../../entity/main-pay-bill-key.entity";
 import {JwtAuthGuard} from "../auth/guard/jwt-auth.guard";
 import {DefaultLogger} from "../../config/logger/default.logger";
 import {RegularPaymentApiDto} from "./dto/regular-payment-api.dto";
-import {IBillKeyPaymentResponse} from "../../common/api/interface/main-pay-api.interface";
+import {IBillKeyPaymentResponse, IHandwritingPaymentResult} from "../../common/api/interface/main-pay-api.interface";
 import {MainPayPaymentServiceName, MainPayResponsePayMethod} from "../../entity/main-pay-response.entity";
+import {HandWritingPaymentApiDto} from "./dto/hand-writing-payment-api.dto";
+import {HandWritingPaymentResponseDto} from "./dto/hand-writing-payment-response.dto";
 
 @Controller('main-pay')
 @ApiTags('MainPay 연동')
@@ -61,7 +63,7 @@ export class MainPayController {
 
         const mainPayResponseInfo = {
             amount: requestBody.amount,
-            applyNo: responseData.data.applNo,
+            applyNo: responseData.data.applNo ? responseData.data.applNo : '',
             billKey: billKeyInfo.billKey,
             failMsg: "",
             isFail: false,
@@ -71,9 +73,9 @@ export class MainPayController {
             payMethod: MainPayResponsePayMethod.CARD,
             payType: "",
             paymentService: MainPayPaymentServiceName.PAYMENT_TEST,
-            refNo: responseData.data.refNo,
+            refNo: responseData.data.refNo ? responseData.data.refNo : '',
             signature: mainPayApi.mainPayBaseInfo.signature,
-            taxAmt: responseData.data.taxAmount,
+            taxAmt: responseData.data.taxAmount ? responseData.data.taxAmount : 0,
             timestamp: mainPayApi.mainPayBaseInfo.timestamps,
         };
 
@@ -161,6 +163,76 @@ export class MainPayController {
             });
             result.resultMessage = response.resultMessage;
             result.result = true;
+        }
+
+        return result;
+    }
+
+    @ApiOperation({
+        description: '신용 카드 수기 결제'
+    })
+    @Post('handwritingPayment')
+    @ApiBearerAuth()
+    @UseGuards(JwtAuthGuard)
+    async handwritingPayment(
+        @Request() request,
+        @Body() requestBody: HandWritingPaymentApiDto,
+    ): Promise<IHandwritingPaymentResponse> {
+        let result: IHandwritingPaymentResponse = {
+            result: false,
+            resultMessage: '',
+        };
+
+        const mainPayApi = new MainPayApi();
+
+        const response = await mainPayApi.handwritingPayment({
+            amount: requestBody.amount,
+            apiKey: process.env.MAINPAY_API_KEY,
+            cardNo: requestBody.cardNo,
+            customerEmail: request.user.email,
+            customerName: request.user.name,
+            customerTelNo: request.user.phone,
+            expd: requestBody.expd,
+            goodsName: requestBody.goodsName,
+            installment: requestBody.installment,
+            keyInAuthType: "K",
+            mbrNo: process.env.MAINPAY_MBRNO,
+        });
+
+        this.logger.log(`handwritingPayment::ResponseData::${JSON.stringify({
+            userId: request.user.id,
+            data: response.data,
+        })}`);
+
+        const responseData = response.data as IHandwritingPaymentResult;
+
+        let handWritingPaymentResponseDto = {
+            amount: Number(requestBody.amount),
+            applyNo: responseData.data.applyNo ? responseData.data.applyNo: '',
+            failMsg: "",
+            isFail: false,
+            mbrNo: process.env.MAINPAY_MBRNO,
+            mbrRefNo: mainPayApi.mainPayBaseInfo.mbrRefNo,
+            payMethod: MainPayResponsePayMethod.CARD,
+            payType: responseData.data.payType ? responseData.data.payType : '',
+            paymentService: MainPayPaymentServiceName.PAYMENT_TEST,
+            refNo: responseData.data.refNo ? responseData.data.refNo : '',
+            signature: mainPayApi.mainPayBaseInfo.signature,
+            taxAmt: 0,
+            timestamp: mainPayApi.mainPayBaseInfo.timestamps,
+        } as HandWritingPaymentResponseDto;
+
+        if (responseData.resultCode === '200') {
+            await this.mainPayService.handwritingPaymentResponseInsert(handWritingPaymentResponseDto);
+            result.resultMessage = responseData.resultMessage;
+            result.result = true;
+        } else {
+            await this.mainPayService.handwritingPaymentResponseInsert({
+                ...handWritingPaymentResponseDto,
+                isFail: true,
+                failMsg: responseData.resultMessage,
+            });
+            result.resultMessage = responseData.resultMessage;
         }
 
         return result;
