@@ -1,17 +1,20 @@
-import {Controller, Post, Body, UseGuards, Request} from '@nestjs/common';
+import {Controller, Post, Body, UseGuards, Request, HttpCode, UnauthorizedException} from '@nestjs/common';
 import {MainPayService} from './main-pay.service';
 import {ApiBearerAuth, ApiOperation, ApiTags} from "@nestjs/swagger";
 import {RegularCardRegisterApiDto} from "./dto/regular-card-register-api.dto";
-import {IBillKeyRegisterResponse, IBillKeyResponse, IHandwritingPaymentResponse, IRegularPaymentResponse} from "./interface/regular.interface";
+import {IBillKeyRegisterResponse, IBillKeyResponse, IHandwritingPaymentResponse, IRegularPaymentCancelResponse, IRegularPaymentResponse} from "./interface/regular.interface";
 import {MainPayApi} from "../../common/api/main-pay.api";
 import {MainPayBillKeyEntity} from "../../entity/main-pay-bill-key.entity";
 import {JwtAuthGuard} from "../auth/guard/jwt-auth.guard";
 import {DefaultLogger} from "../../config/logger/default.logger";
 import {RegularPaymentApiDto} from "./dto/regular-payment-api.dto";
-import {IBillKeyPaymentResponse, IHandwritingPaymentResult} from "../../common/api/interface/main-pay-api.interface";
+import {IBillKeyPaymentCancelResponse, IBillKeyPaymentResponse, IHandwritingPaymentResult} from "../../common/api/interface/main-pay-api.interface";
 import {MainPayPaymentServiceName, MainPayResponsePayMethod} from "../../entity/main-pay-response.entity";
 import {HandWritingPaymentApiDto} from "./dto/hand-writing-payment-api.dto";
 import {HandWritingPaymentResponseDto} from "./dto/hand-writing-payment-response.dto";
+import {RegularPaymentCancelApiDto} from "./dto/regular-payment-cancel-api.dto";
+import {RegularCardPaymentResponseDto} from "./dto/regular-card-payment-response.dto";
+import {format} from "date-fns";
 
 @Controller('main-pay')
 @ApiTags('MainPay 연동')
@@ -27,11 +30,12 @@ export class MainPayController {
     })
     @ApiBearerAuth()
     @UseGuards(JwtAuthGuard)
+    @HttpCode(200)
     async regularPayment(
         @Request() request,
         @Body() requestBody: RegularPaymentApiDto,
-    ): Promise<IRegularPaymentResponse> {
-        let result: IRegularPaymentResponse = {
+    ): Promise<IRegularPaymentCancelResponse> {
+        let result: IRegularPaymentCancelResponse = {
             result: false,
             resultMessage: '',
         };
@@ -78,7 +82,7 @@ export class MainPayController {
             taxAmt: responseData.data.taxAmount ? responseData.data.taxAmount : 0,
             timestamp: mainPayApi.mainPayBaseInfo.timestamps,
             userId: request.user.id,
-        };
+        } as RegularCardPaymentResponseDto;
 
         if (response.data.resultCode === '200') {
             await this.mainPayService.regularPaymentResponseInsert(mainPayResponseInfo);
@@ -96,12 +100,65 @@ export class MainPayController {
         return result;
     }
 
+    @Post('regular/payment-cancel')
+    @ApiOperation({
+        description: '메인페이 정기결제 결제 취소',
+    })
+    @ApiBearerAuth()
+    @UseGuards(JwtAuthGuard)
+    @HttpCode(200)
+    async regularPaymentCancel(
+        @Request() request,
+        @Body() requestBody: RegularPaymentCancelApiDto,
+    ) {
+        let result: IRegularPaymentCancelResponse = {
+            result: false,
+            resultMessage: '',
+        };
+
+        const paymentInfo = await this.mainPayService.findPaymentResponse(requestBody.mbrRefNo);
+        if (!paymentInfo) {
+            throw new UnauthorizedException({'reason': '검색된 결제 정보가 없습니다.'});
+        }
+
+        const mainPayApi = new MainPayApi();
+        const response = await mainPayApi.billKeyPaymentCancel({
+            amount: String(paymentInfo.amount),
+            apiKey: process.env.MAINPAY_API_KEY,
+            mbrNo: process.env.MAINPAY_MBRNO,
+            orgRefNo: paymentInfo.refNo,
+            orgTranDate: format(new Date(paymentInfo.createdAt), 'yyyyMMdd').substring(2, 8),
+        });
+
+        const responseData = response.data as IBillKeyPaymentCancelResponse;
+
+        result.resultMessage = responseData.resultMessage;
+
+        if (responseData.resultCode !== '200') {
+            await this.mainPayService.paymentCancelInfoUpdate({isCancel: false, cancelMsg: responseData.resultMessage, mbrRefNo: paymentInfo.mbrRefNo});
+            return result;
+        }
+
+        await this.mainPayService.paymentCancelInfoUpdate({isCancel: true, cancelMsg: responseData.resultMessage, mbrRefNo: paymentInfo.mbrRefNo});
+        await mainPayApi.billKeyUnused({
+            apiKey: process.env.MAINPAY_API_KEY,
+            billKey: paymentInfo.billKey,
+            mbrNo: paymentInfo.mbrNo,
+        });
+        await this.mainPayService.regularPaymentCancelBillKeyDelete(request.user.id, paymentInfo.billKey);
+
+        result.result = true;
+
+        return result;
+    }
+
     @Post('regular/register')
     @ApiOperation({
         description: '메인페이 정기결제 카드 등록',
     })
     @ApiBearerAuth()
     @UseGuards(JwtAuthGuard)
+    @HttpCode(200)
     async regularRegister(
         @Request() request,
         @Body() requestBody: RegularCardRegisterApiDto,
@@ -175,6 +232,7 @@ export class MainPayController {
     @Post('handwritingPayment')
     @ApiBearerAuth()
     @UseGuards(JwtAuthGuard)
+    @HttpCode(200)
     async handwritingPayment(
         @Request() request,
         @Body() requestBody: HandWritingPaymentApiDto,

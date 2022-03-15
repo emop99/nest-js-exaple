@@ -44,3 +44,11 @@ export interface IHandwritingPaymentResponse {
     result: boolean;
     resultMessage: string;
 }
+
+/**
+ * 정기결제 카드 취소 Response
+ */
+export interface IRegularPaymentCancelResponse {
+    result: boolean;
+    resultMessage: string;
+}

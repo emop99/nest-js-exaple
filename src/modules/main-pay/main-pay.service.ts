@@ -5,6 +5,7 @@ import {MainPayBillKeyEntity} from "../../entity/main-pay-bill-key.entity";
 import {RegularCardRegisterDto} from "./dto/regular-card-register.dto";
 import {RegularCardPaymentResponseDto} from "./dto/regular-card-payment-response.dto";
 import {HandWritingPaymentResponseDto} from "./dto/hand-writing-payment-response.dto";
+import {PaymentCancelInfoUpdateDto} from "./dto/payment-cancel-info-update.dto";
 
 @Injectable()
 export class MainPayService {
@@ -33,6 +34,10 @@ export class MainPayService {
         await this.mainPayBillKeyRepository.update({id: id}, {deletedAt: new Date()});
     };
 
+    public async regularPaymentCancelBillKeyDelete(userId: number, billkey: string): Promise<void> {
+        await this.mainPayBillKeyRepository.update({billKey: billkey, userId: userId}, {deletedAt: new Date()});
+    };
+
     public async regularPaymentResponseInsert(mainPayResponseInfo: RegularCardPaymentResponseDto): Promise<void> {
         mainPayResponseInfo.failMsg = mainPayResponseInfo.failMsg.replace(/"/gi, "");
         await this.mainPayResponseRepository.save(mainPayResponseInfo);
@@ -41,5 +46,17 @@ export class MainPayService {
     public async handwritingPaymentResponseInsert(mainPayResponseInfo: HandWritingPaymentResponseDto): Promise<void> {
         mainPayResponseInfo.failMsg = mainPayResponseInfo.failMsg.replace(/"/gi, "");
         await this.mainPayResponseRepository.save(mainPayResponseInfo);
-    }
+    };
+
+    public async findPaymentResponse(mbrRefNo: string): Promise<MainPayResponseEntity> {
+        return await this.mainPayResponseRepository.findOne({where: {mbrRefNo: mbrRefNo}});
+    };
+
+    public async paymentCancelInfoUpdate(cancelInfo: PaymentCancelInfoUpdateDto): Promise<void> {
+        await this.mainPayResponseRepository.update({mbrRefNo: cancelInfo.mbrRefNo}, {
+            isCancel: cancelInfo.isCancel,
+            cancelMsg: cancelInfo.cancelMsg,
+            cancelDate: new Date(),
+        })
+    };
 }
