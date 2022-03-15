@@ -1,4 +1,4 @@
-import {Controller, Get, Post} from '@nestjs/common';
+import {Controller, Get, NotFoundException, Post, UnauthorizedException} from '@nestjs/common';
 import {AppService} from './app.service';
 
 @Controller()
@@ -7,7 +7,7 @@ export class AppController {
     }
 
     @Get()
-    getHello(): string {
-        return this.appService.getHello();
-    }
+    firstPage() {
+        throw new NotFoundException();
+    };
 }
