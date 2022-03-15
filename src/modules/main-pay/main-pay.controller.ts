@@ -77,6 +77,7 @@ export class MainPayController {
             signature: mainPayApi.mainPayBaseInfo.signature,
             taxAmt: responseData.data.taxAmount ? responseData.data.taxAmount : 0,
             timestamp: mainPayApi.mainPayBaseInfo.timestamps,
+            userId: request.user.id,
         };
 
         if (response.data.resultCode === '200') {
@@ -220,6 +221,7 @@ export class MainPayController {
             signature: mainPayApi.mainPayBaseInfo.signature,
             taxAmt: 0,
             timestamp: mainPayApi.mainPayBaseInfo.timestamps,
+            userId: request.user.id,
         } as HandWritingPaymentResponseDto;
 
         if (responseData.resultCode === '200') {

@@ -46,4 +46,7 @@ export class RegularCardPaymentResponseDto {
 
     @IsString()
     payType: string;
+
+    @IsNumber()
+    userId: number;
 }

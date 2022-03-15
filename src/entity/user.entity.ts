@@ -1,5 +1,6 @@
 import {Column, CreateDateColumn, DeleteDateColumn, Entity, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn} from "typeorm";
 import {MainPayBillKeyEntity} from "./main-pay-bill-key.entity";
+import {MainPayResponseEntity} from "./main-pay-response.entity";
 
 @Entity('user')
 export class UserEntity {
@@ -41,6 +42,9 @@ export class UserEntity {
     @DeleteDateColumn()
     deletedAt: Date;
 
-    @OneToMany(type => MainPayBillKeyEntity, mainPayBillKeyEntity => mainPayBillKeyEntity.user)
+    @OneToMany(() => MainPayBillKeyEntity, mainPayBillKeyEntity => mainPayBillKeyEntity.user)
     billKeys: MainPayBillKeyEntity[];
+
+    @OneToMany(() => MainPayResponseEntity, mainPayResponseEntity => mainPayResponseEntity.user)
+    mainPayResponse: MainPayResponseEntity[];
 }

@@ -1,4 +1,5 @@
-import {Column, CreateDateColumn, DeleteDateColumn, Entity, PrimaryColumn, UpdateDateColumn} from "typeorm";
+import {Column, CreateDateColumn, DeleteDateColumn, Entity, ManyToOne, PrimaryColumn, UpdateDateColumn} from "typeorm";
+import {UserEntity} from "./user.entity";
 
 export enum MainPayPaymentServiceName {
     PAYMENT_TEST = 'payment_test',
@@ -162,4 +163,10 @@ export class MainPayResponseEntity {
 
     @DeleteDateColumn()
     deletedAt: string;
+
+    @ManyToOne(() => UserEntity, user => user.mainPayResponse)
+    user: UserEntity;
+
+    @Column()
+    userId: number;
 }

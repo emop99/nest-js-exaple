@@ -40,4 +40,7 @@ export class HandWritingPaymentResponseDto {
 
     @IsString()
     payType: string;
+
+    @IsNumber()
+    userId: number;
 }
