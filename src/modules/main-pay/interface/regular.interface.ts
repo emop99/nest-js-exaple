@@ -52,3 +52,11 @@ export interface IRegularPaymentCancelResponse {
     result: boolean;
     resultMessage: string;
 }
+
+/**
+ * 신용 카드 수기 결제 취소 Response
+ */
+export interface IHandwritingPaymentCancelResponse {
+    result: boolean;
+    resultMessage: string;
+}

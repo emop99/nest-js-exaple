@@ -309,3 +309,31 @@ export interface IHandwritingPaymentResult {
         acqCompanyName: string; // 카드매입사명	100
     };
 }
+
+/**
+ * 결제 취소 처리
+ */
+export interface IPaymentCancelParams {
+    mbrNo: string;// 섹타나인에서 부여한 가맹점 번호 (상점 아이디)	6
+    orgRefNo: string;// 원거래번호 (승인응답 시 보관한 거래번호)	12
+    orgTranDate: string;// 원거래 승인일자 (승인응답 시 보관한 승인일자)	6
+    payType: string;// 원거래 결제타입 (승인응답 시 보관한 결제타입)
+    paymethod: string;// 지불수단 (CARD:신용카드 | HPP: 휴대폰소액 | ACCT: 계좌이체)	5
+    apiKey: string;
+    amount: string;
+}
+
+/**
+ * 결제 취소 처리 Response
+ */
+export interface IPaymentCancelResponse {
+    resultCode: string;// 응답코드 '200' 이면 성공, 이외는 거절	4
+    resultMessage: string;// 응답메시지	200
+    data: {
+        mbrNo: string;// 가맹점번호	6
+        mbrRefNo: string;// 가맹점주문번호	20
+        refNo: string;// 거래번호	12
+        tranDate: string;// 거래일자	6
+        tranTime: string;// 거래시각
+    };
+}

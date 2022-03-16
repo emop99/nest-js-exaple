@@ -1,11 +1,24 @@
 import {
-    IBillKeyPaymentCancelParams, IBillKeyPaymentCancelResponse,
+    IBillKeyPaymentCancelParams,
+    IBillKeyPaymentCancelResponse,
     IBillKeyPaymentParams,
     IBillKeyPaymentResponse,
     IBillKeyRegisterParams,
-    IBillKeyRegisterResponse, IBillKeyUnusedParams, IBillKeyUnusedResponse, IHandwritingPaymentParams, IHandwritingPaymentResult,
+    IBillKeyRegisterResponse,
+    IBillKeyUnusedParams,
+    IBillKeyUnusedResponse,
+    IHandwritingPaymentParams,
+    IHandwritingPaymentResult,
     IMakeMainPayBaseInfo,
-    IMakeSignature, IPaymentParams, IPaymentReadyMainPayResponse, IPaymentReadyParams, IPaymentReadyResponse, IPaymentReadyTokenCreateParams, IPaymentResponse
+    IMakeSignature,
+    IPaymentCancelParams,
+    IPaymentCancelResponse,
+    IPaymentParams,
+    IPaymentReadyMainPayResponse,
+    IPaymentReadyParams,
+    IPaymentReadyResponse,
+    IPaymentReadyTokenCreateParams,
+    IPaymentResponse
 } from "./interface/main-pay-api.interface";
 import {format} from "date-fns";
 import {v4 as uuidv4} from "uuid";
@@ -79,6 +92,15 @@ export class MainPayApi {
     private static makeSignature(data: IMakeSignature) {
         const crypto = require('crypto');
         return crypto.createHash('sha256').update(`${data.mbrNo}|${data.mbrRefNo}|${data.amount}|${data.apiKey}|${data.timestamps}`).digest('hex');
+    };
+
+    /**
+     * 결제취소 시 사용되는 결제일 정보 가져오기
+     * @param paymentDate
+     * @private
+     */
+    public static getOrgTranDate(paymentDate: Date) {
+        return format(new Date(paymentDate), 'yyyyMMdd').substring(2, 8);
     };
 
     /**
@@ -366,6 +388,35 @@ export class MainPayApi {
 
         return axios.post(
             `${process.env.MAINPAY_HOST}/v1/api/payments/payment/card-keyin/trans`,
+            params,
+            {headers: {'Content-Type': 'application/x-www-form-urlencoded; charset=utf-8'}},
+        );
+    };
+
+    /**
+     * 결제 취소 처리
+     * @param data IPaymentCancelParams
+     * @return {} IPaymentCancelResponse
+     */
+    public async paymentCancel(data: IPaymentCancelParams): Promise<AxiosPromise<IPaymentCancelResponse>> {
+        this.makeMainPayBaseInfo({
+            mbrNo: data.mbrNo,
+            apiKey: data.apiKey,
+            amount: data.amount,
+        });
+
+        const params = new URLSearchParams();
+        params.append('mbrNo', data.mbrNo);
+        params.append('mbrRefNo', this.mainPayBaseInfo.mbrRefNo);
+        params.append('orgRefNo', data.orgRefNo);
+        params.append('orgTranDate', data.orgTranDate);
+        params.append('payType', data.payType);
+        params.append('paymethod', data.paymethod);
+        params.append('timestamp', this.mainPayBaseInfo.timestamps);
+        params.append('signature', this.mainPayBaseInfo.signature);
+
+        return axios.post(
+            `${process.env.MAINPAY_HOST}/v1/api/payments/payment/cancel`,
             params,
             {headers: {'Content-Type': 'application/x-www-form-urlencoded; charset=utf-8'}},
         );

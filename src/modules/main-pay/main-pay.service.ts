@@ -56,7 +56,7 @@ export class MainPayService {
         await this.mainPayResponseRepository.update({mbrRefNo: cancelInfo.mbrRefNo}, {
             isCancel: cancelInfo.isCancel,
             cancelMsg: cancelInfo.cancelMsg,
-            cancelDate: new Date(),
+            cancelDate: cancelInfo.isCancel ? new Date() : null,
         })
     };
 }
