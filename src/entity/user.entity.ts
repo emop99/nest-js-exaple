@@ -1,6 +1,7 @@
 import {Column, CreateDateColumn, DeleteDateColumn, Entity, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn} from "typeorm";
 import {MainPayBillKeyEntity} from "./main-pay-bill-key.entity";
 import {MainPayResponseEntity} from "./main-pay-response.entity";
+import {BoardEntity} from "./board.entity";
 
 @Entity('user')
 export class UserEntity {
@@ -47,4 +48,7 @@ export class UserEntity {
 
     @OneToMany(() => MainPayResponseEntity, mainPayResponseEntity => mainPayResponseEntity.user)
     mainPayResponse: MainPayResponseEntity[];
+
+    @OneToMany(() => BoardEntity, boardEntity => boardEntity.user)
+    board: BoardEntity[];
 }
