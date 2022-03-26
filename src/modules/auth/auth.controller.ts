@@ -8,7 +8,7 @@ import {JwtAuthGuard} from "./guard/jwt-auth.guard";
 import {DefaultLogger} from "../../config/logger/default.logger";
 
 @Controller('auth')
-@ApiTags('auth')
+@ApiTags('Auth')
 export class AuthController {
     private logger = new DefaultLogger('auth');
 
@@ -18,7 +18,7 @@ export class AuthController {
     }
 
     @HttpCode(200)
-    @Post('userLogin')
+    @Post('user/login')
     @ApiOperation({
         description: '유저 로그인',
     })
@@ -32,7 +32,7 @@ export class AuthController {
     };
 
     @HttpCode(200)
-    @Post('userRegister')
+    @Post('user/register')
     @ApiOperation({
         description: '유저 회원가입',
     })
@@ -53,7 +53,7 @@ export class AuthController {
     };
 
     @HttpCode(200)
-    @Get('loginCheck')
+    @Get('user/login/check')
     @ApiOperation({
         description: '유저 로그인 여부 체크',
     })

@@ -235,7 +235,7 @@ export class MainPayController {
     @ApiOperation({
         description: '신용 카드 수기 결제'
     })
-    @Post('handwritingPayment')
+    @Post('handwriting/payment')
     @ApiBearerAuth()
     @UseGuards(JwtAuthGuard)
     @HttpCode(200)
@@ -307,7 +307,7 @@ export class MainPayController {
     @ApiOperation({
         description: '신용 카드 수기 결제 취소'
     })
-    @Post('handwritingPayment-cancel')
+    @Post('handwriting/payment-cancel')
     @ApiBearerAuth()
     @UseGuards(JwtAuthGuard)
     @HttpCode(200)
