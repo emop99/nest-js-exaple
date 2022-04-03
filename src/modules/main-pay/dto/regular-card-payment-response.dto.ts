@@ -1,52 +1,55 @@
-import {IsBoolean, IsEnum, IsNumber, IsString} from "class-validator";
-import {MainPayPaymentServiceName, MainPayResponsePayMethod} from "../../../entity/main-pay-response.entity";
+import { IsBoolean, IsEnum, IsNumber, IsString } from 'class-validator';
+import {
+  MainPayPaymentServiceName,
+  MainPayResponsePayMethod,
+} from '../../../entity/main-pay-response.entity';
 
 export class RegularCardPaymentResponseDto {
-    @IsString()
-    mbrRefNo: string;
+  @IsString()
+  mbrRefNo: string;
 
-    @IsString()
-    mbrNo: string;
+  @IsString()
+  mbrNo: string;
 
-    @IsEnum(MainPayPaymentServiceName)
-    paymentService: string;
+  @IsEnum(MainPayPaymentServiceName)
+  paymentService: string;
 
-    @IsNumber()
-    amount: number;
+  @IsNumber()
+  amount: number;
 
-    @IsNumber()
-    taxAmt: number;
+  @IsNumber()
+  taxAmt: number;
 
-    @IsString()
-    signature: string;
+  @IsString()
+  signature: string;
 
-    @IsString()
-    billKey: string;
+  @IsString()
+  billKey: string;
 
-    @IsBoolean()
-    payAuto: boolean;
+  @IsBoolean()
+  payAuto: boolean;
 
-    @IsString()
-    failMsg: string;
+  @IsString()
+  failMsg: string;
 
-    @IsBoolean()
-    isFail: boolean;
+  @IsBoolean()
+  isFail: boolean;
 
-    @IsString()
-    refNo: string;
+  @IsString()
+  refNo: string;
 
-    @IsString()
-    timestamp: string;
+  @IsString()
+  timestamp: string;
 
-    @IsEnum(MainPayResponsePayMethod)
-    payMethod: string;
+  @IsEnum(MainPayResponsePayMethod)
+  payMethod: string;
 
-    @IsString()
-    applyNo: string;
+  @IsString()
+  applyNo: string;
 
-    @IsString()
-    payType: string;
+  @IsString()
+  payType: string;
 
-    @IsNumber()
-    userId: number;
+  @IsNumber()
+  userId: number;
 }

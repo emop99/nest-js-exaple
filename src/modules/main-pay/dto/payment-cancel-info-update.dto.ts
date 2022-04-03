@@ -1,12 +1,12 @@
-import {IsNumber, IsString} from "class-validator";
+import { IsNumber, IsString } from 'class-validator';
 
 export class PaymentCancelInfoUpdateDto {
-    @IsString()
-    mbrRefNo: string;
+  @IsString()
+  mbrRefNo: string;
 
-    @IsNumber()
-    isCancel: boolean;
+  @IsNumber()
+  isCancel: boolean;
 
-    @IsString()
-    cancelMsg: string;
+  @IsString()
+  cancelMsg: string;
 }
