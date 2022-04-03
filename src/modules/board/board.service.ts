@@ -1,8 +1,9 @@
-import { Inject, Injectable } from '@nestjs/common';
-import { BoardEntity } from '../../entity/board.entity';
-import { Repository } from 'typeorm';
-import { ListApiDto } from './dto/list-api.dto';
-import { ListSearchKey } from './interface/list.interface';
+import { Inject, Injectable } from "@nestjs/common";
+import { BoardEntity } from "../../entity/board.entity";
+import { Repository } from "typeorm";
+import { ListApiDto } from "./dto/list-api.dto";
+import { ListSearchKey } from "./interface/list.interface";
+import { BoardDto } from "./dto/board.dto";
 
 @Injectable()
 export class BoardService {
@@ -29,5 +30,18 @@ export class BoardService {
     return this.boardRepository.find({
       where: searchTextWhere,
     });
+  }
+
+  public async write(boardDto: BoardDto): Promise<void> {
+    await this.boardRepository.save(boardDto);
+  }
+
+  public async viewBoard(no: number) {
+    await this.viewCountUp(no);
+    return await this.boardRepository.findOne(no);
+  }
+
+  public async viewCountUp(no: number) {
+    await this.boardRepository.increment({ id: no }, 'viewCnt', 1);
   }
 }
