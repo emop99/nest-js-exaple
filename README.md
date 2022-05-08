@@ -5,7 +5,7 @@
 [circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
 [circleci-url]: https://circleci.com/gh/nestjs/nest
 
-# Nest.Js Example
+# Nest.Js Example (http://nestjs.emop.kro.kr/api/v1/docs)
 
 ## Example List
 - Main Pay 결제 연동
